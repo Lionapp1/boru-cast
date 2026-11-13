@@ -149,7 +149,7 @@ private fun BoruHome() {
                                 server.start(fi.iki.elonen.NanoHTTPD.SOCKET_READ_TIMEOUT, false)
                                 castServer = server
                                 val ip = findLocalIpv4()
-                                castUrl = ip?.let { "http://" + it + ":8080" }
+                                castUrl = ip?.let { "http://" + it + ":8080/?key=" + server.accessKey }
                                     ?: "IP adresi bulunamadı. Wi-Fi bağlantını kontrol et."
                                 serverError = null
                             } catch (e: Exception) {
