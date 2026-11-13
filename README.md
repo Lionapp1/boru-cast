@@ -22,11 +22,21 @@ BÖRÜ CAST; Android telefonlardan Android TV'ye veya tarayıcı üzerinden aç�
 - [ ] Android TV alıcısı
 - [ ] Tarayıcı alıcısı
 - [ ] Gerçek cihaz keşfi ve eşleştirme
-- [ ] Ağ üzerinden medya/dosya aktarımı
+- [x] Aynı Wi-Fi ağında tarayıcı üzerinden fotoğraf/video/ses akışı ve dosya indirme
+- [ ] Android TV yerel alıcı uygulaması
 - [ ] MediaProjection + WebRTC ekran yansıtma
 - [ ] Uzaktan kumanda
 
-**Dürüst durum notu:** İlk geliştirme sürümünde arayüz ve Android dosya seçimi hazırdır. Henüz TV'ye gerçek aktarım, eşleştirme veya ekran yansıtma tamamlanmış değildir. Bu özellikler çalışır hâle geldikçe işaretlenecektir.
+
+## Şu an çalışan aktarım (tarayıcı alıcısı)
+1. Telefon ve televizyonu aynı Wi-Fi ağına bağla.
+2. Android uygulamasında Fotoğraf/video, Müzik veya Dosya gönder bölümünden bir içerik seç.
+3. **TV'ye aktarımı başlat** düğmesine dokun.
+4. Uygulamanın gösterdiği `http://telefon-ip:8080` adresini televizyonun internet tarayıcısına yaz.
+5. Desteklenen fotoğraf, video ve ses dosyaları tarayıcıda açılır. Diğer dosyalar indirme bağlantısıyla alınabilir.
+6. Aktarımı durdurmak için uygulamadaki düğmeyi kullan. Telefon uygulaması açık kalmalıdır.
+
+**Geliştirme durumu:** Bu sürüm yerel ağda tarayıcı üzerinden gerçek medya akışı ve dosya indirme sağlar. Otomatik TV keşfi/eşleştirme, ayrı Android TV alıcısı, MediaProjection ile canlı ekran yansıtma ve uzaktan kumanda henüz tamamlanmamıştır. Bu özellikler test edilmeden tamamlandı olarak işaretlenmeyecektir.
 
 ## Derleme gereksinimleri
 - JDK 17
