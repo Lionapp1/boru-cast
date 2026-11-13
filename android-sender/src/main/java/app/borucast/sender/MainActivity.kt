@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -50,6 +51,7 @@ private fun BoruTheme(content: @Composable () -> Unit) {
 
 @Composable
 private fun BoruHome() {
+    val context = LocalContext.current
     var selected by remember { mutableStateOf("Cihazlar") }
     var pickedName by remember { mutableStateOf<String?>(null) }
     var pickedUri by remember { mutableStateOf<Uri?>(null) }
@@ -145,7 +147,7 @@ private fun BoruHome() {
                         } else {
                             try {
                                 castServer?.stop()
-                                val server = LocalCastServer(contentResolver, source)
+                                val server = LocalCastServer(context.contentResolver, source)
                                 server.start(fi.iki.elonen.NanoHTTPD.SOCKET_READ_TIMEOUT, false)
                                 castServer = server
                                 val ip = findLocalIpv4()
