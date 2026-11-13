@@ -1,13 +1,17 @@
 package app.borucast.sender
 
 import android.net.Uri
+import android.graphics.Bitmap
 import android.os.Bundle
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -170,12 +175,24 @@ private fun BoruHome() {
                 }
             }
             if (castUrl != null) item {
-                Column(Modifier.fillMaxWidth().background(Color(0xFF123344), RoundedCornerShape(18.dp)).padding(16.dp)) {
-                    Text("TV TARAYICISINDA BU ADRESİ AÇ", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Column(Modifier.fillMaxWidth().background(Color(0xFF123344), RoundedCornerShape(18.dp)).padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("TV İLE EŞLEŞTİR", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
-                    Text(castUrl!!, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                    Text("PIN: ${castServer?.pairingPin ?: "------"}", fontSize = 30.sp, fontWeight = FontWeight.Black, letterSpacing = 5.sp)
+                    Text("PIN 5 dakika geçerlidir ve tek kullanımlıktır.", color = Muted, fontSize = 11.sp)
+                    Spacer(Modifier.height(12.dp))
+                    val qrBitmap = remember(castUrl) { createQrBitmap(castUrl!!) }
+                    qrBitmap?.let {
+                        Image(bitmap = it.asImageBitmap(), contentDescription = "TV bağlantı QR kodu",
+                            modifier = Modifier.size(180.dp).background(Color.White, RoundedCornerShape(10.dp)).padding(8.dp))
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Text("TV tarayıcısında bu adresi aç veya TV'nin QR okuyucusuyla kodu okut:", color = Muted, fontSize = 12.sp)
                     Spacer(Modifier.height(6.dp))
-                    Text("Telefon ve TV aynı Wi-Fi ağına bağlı olmalı. Telefon uygulamasını açık tut.", color = Muted, fontSize = 12.sp)
+                    Text(castUrl!!, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(6.dp))
+                    Text("TV'de açılan ekrana yukarıdaki PIN'i gir. Telefon ve TV aynı Wi-Fi ağında olmalı.", color = Muted, fontSize = 12.sp)
                     TextButton(onClick = { castServer?.stop(); castServer = null; castUrl = null }) {
                         Text("Aktarımı durdur", color = Cyan)
                     }
@@ -229,6 +246,19 @@ private fun findLocalIpv4(): String? {
             }
         }
         null
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun createQrBitmap(value: String): Bitmap? {
+    return try {
+        val matrix = QRCodeWriter().encode(value, BarcodeFormat.QR_CODE, 480, 480)
+        Bitmap.createBitmap(480, 480, Bitmap.Config.ARGB_8888).also { bitmap ->
+            for (x in 0 until 480) for (y in 0 until 480) {
+                bitmap.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+            }
+        }
     } catch (_: Exception) {
         null
     }
