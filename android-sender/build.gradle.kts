@@ -34,5 +34,6 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("org.nanohttpd:nanohttpd:2.3.1")
     implementation("org.json:json:20240303")
+    implementation("com.google.zxing:core:3.5.3")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
