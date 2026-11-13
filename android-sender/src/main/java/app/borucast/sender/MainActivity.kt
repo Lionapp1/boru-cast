@@ -2,6 +2,8 @@ package app.borucast.sender
 
 import android.net.Uri
 import android.os.Bundle
+import java.net.Inet4Address
+import java.net.NetworkInterface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -50,9 +52,13 @@ private fun BoruTheme(content: @Composable () -> Unit) {
 private fun BoruHome() {
     var selected by remember { mutableStateOf("Cihazlar") }
     var pickedName by remember { mutableStateOf<String?>(null) }
+    var pickedUri by remember { mutableStateOf<Uri?>(null) }
+    var castServer by remember { mutableStateOf<LocalCastServer?>(null) }
+    var castUrl by remember { mutableStateOf<String?>(null) }
+    var serverError by remember { mutableStateOf<String?>(null) }
     var showInfo by remember { mutableStateOf(false) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        uri?.let { pickedName = it.lastPathSegment ?: "Dosya seçildi" }
+        uri?.let { pickedUri = it; pickedName = it.lastPathSegment ?: "Dosya seçildi"; castServer?.stop(); castServer = null; castUrl = null; serverError = null }
     }
     Scaffold(
         containerColor = Ink,
@@ -130,13 +136,60 @@ private fun BoruHome() {
                     Text(pickedName ?: "Henüz dosya seçilmedi", fontWeight = FontWeight.SemiBold)
                 }
             }
-            item { Text("Güvenli yerel bağlantı • İnternet üzerinden aktarım yok", color = Muted, fontSize = 11.sp) }
+            item {
+                Button(
+                    onClick = {
+                        val source = pickedUri
+                        if (source == null) {
+                            serverError = "Önce aktarılacak bir fotoğraf, video, müzik veya dosya seç."
+                        } else {
+                            try {
+                                castServer?.stop()
+                                val server = LocalCastServer(contentResolver, source)
+                                server.start(fi.iki.elonen.NanoHTTPD.SOCKET_READ_TIMEOUT, false)
+                                castServer = server
+                                val ip = findLocalIpv4()
+                                castUrl = ip?.let { "http://" + it + ":8080" }
+                                    ?: "IP adresi bulunamadı. Wi-Fi bağlantını kontrol et."
+                                serverError = null
+                            } catch (e: Exception) {
+                                serverError = "Aktarım sunucusu başlatılamadı: " + (e.message ?: "Bağlantı hatası")
+                            }
+                        }
+                    },
+                    enabled = pickedUri != null,
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Cyan, contentColor = Ink),
+                    shape = RoundedCornerShape(15.dp)
+                ) {
+                    Icon(Icons.Rounded.Cast, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("TV'YE AKTARIMI BAŞLAT", fontWeight = FontWeight.Bold)
+                }
+            }
+            if (castUrl != null) item {
+                Column(Modifier.fillMaxWidth().background(Color(0xFF123344), RoundedCornerShape(18.dp)).padding(16.dp)) {
+                    Text("TV TARAYICISINDA BU ADRESİ AÇ", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                    Text(castUrl!!, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Telefon ve TV aynı Wi-Fi ağına bağlı olmalı. Telefon uygulamasını açık tut.", color = Muted, fontSize = 12.sp)
+                    TextButton(onClick = { castServer?.stop(); castServer = null; castUrl = null }) {
+                        Text("Aktarımı durdur", color = Cyan)
+                    }
+                }
+            }
+            if (serverError != null) item {
+                Text(serverError!!, color = Color(0xFFFF8A80), fontSize = 12.sp)
+            }
+            item { Text("Yerel Wi-Fi aktarımı • İnternet üzerinden gönderim yapılmaz", color = Muted, fontSize = 11.sp) }
         }
     }
+    DisposableEffect(Unit) { onDispose { castServer?.stop() } }
     if (showInfo) {
         AlertDialog(onDismissRequest = { showInfo = false },
             title = { Text("BÖRÜ CAST • 0.1.0") },
-            text = { Text("Bu ilk geliştirme sürümünde arayüz ve Android dosya seçimi hazırlandı. TV keşfi, eşleştirme, gerçek aktarım ve ekran yansıtma sonraki adımlarda etkinleştirilecek.") },
+            text = { Text("Dosya seçtikten sonra TV’ye aktarımı başlat ve TV tarayıcısında gösterilen yerel adresi aç. Bu sürümde tarayıcı üzerinden yerel medya aktarımı vardır. Otomatik cihaz keşfi, canlı ekran yansıtma ve uzaktan kumanda henüz geliştirme aşamasındadır.") },
             confirmButton = { TextButton(onClick = { showInfo = false }) { Text("Tamam") } },
             containerColor = Panel, titleContentColor = Color.White, textContentColor = Muted)
     }
@@ -160,5 +213,21 @@ private fun FeatureCard(
             Text(subtitle, color = Muted, fontSize = 12.sp)
         }
         Icon(Icons.Rounded.ChevronRight, null, tint = Muted)
+    }
+}
+
+private fun findLocalIpv4(): String? {
+    return try {
+        val interfaces = NetworkInterface.getNetworkInterfaces()
+        while (interfaces.hasMoreElements()) {
+            val addresses = interfaces.nextElement().inetAddresses
+            while (addresses.hasMoreElements()) {
+                val address = addresses.nextElement()
+                if (!address.isLoopbackAddress && address is Inet4Address) return address.hostAddress
+            }
+        }
+        null
+    } catch (_: Exception) {
+        null
     }
 }
