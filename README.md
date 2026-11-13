@@ -56,3 +56,5 @@ APK çıktısı: android-sender/build/outputs/apk/debug/android-sender-debug.apk
 
 ## Lisans
 MIT
+
+Ayrıntılı PIN/QR eşleştirme, WebRTC yansıtma, dosya aktarımı ve gerçek cihaz kabul kriterleri: [docs/CASTING_AND_PAIRING_SPEC.md](docs/CASTING_AND_PAIRING_SPEC.md).
