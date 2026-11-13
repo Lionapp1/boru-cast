@@ -147,7 +147,7 @@ private fun BoruHome() {
                         } else {
                             try {
                                 castServer?.stop()
-                                val server = LocalCastServer(context.contentResolver, source)
+                                val server = LocalCastServer(context.getContentResolver(), source)
                                 server.start(fi.iki.elonen.NanoHTTPD.SOCKET_READ_TIMEOUT, false)
                                 castServer = server
                                 val ip = findLocalIpv4()
